@@ -1,0 +1,35 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: init-demo
+  namespace: homework
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    ports:
+    - containerPort: 8000
+    volumeMounts:
+    - name: homeworkcarpeta
+      mountPath: /usr/share/nginx/homework/html
+    lifecycle:
+      preStop:
+        exec:
+          command: ["/bin/sh","-c","nginx -s quit; while killall -0 nginx; do sleep 1; rm /usr/share/nginx/homework/html/index.html; done"]
+# These containers are run during pod initialization
+  initContainers:
+  - name: install
+    image: busybox:1.28
+    command:
+    - wget
+    - "-O"
+    - "/init/index.html"
+    - http://info.cern.ch
+    volumeMounts:
+    - name: homeworkcarpeta
+      mountPath: "/init"
+  dnsPolicy: Default
+  volumes:
+  - name: homeworkcarpeta
+    emptyDir:
+      sizeLimit:  50Mi
